@@ -3,21 +3,31 @@
 source "${GITHUB_ACTION_PATH}/util.sh"
 
 pathsToCopy="$1"
-# Copy paths to render dir
-for row in $(echo "${pathsToCopy}" | jq -c '.[]'); do
+
+copy() {
+  local row=$1
+  local destination_base=$2
+
   _jq() {
     echo ${row} | jq -r ${1}
   }
+
   copy=$(_jq '.if')
   source=$(_jq '.source')
   target=$(_jq '.target')
 
   if [ "${copy}" = true ]; then
-    echo "Copying from ${RENDER_DIR?}/${target}"
-    mkdir -p $(dirname "${RENDER_DIR?}/${target}") && cp -r "./${source}" "${RENDER_DIR?}/${target}"
+    echo "Copying from ${destination_base}/${target}"
+    mkdir -p $(dirname "${destination_base}/${target}") && cp -r "${source}" "${destination_base}/${target}"
+    [[ $3 == "git_add" ]] && git add "./${target}"
   else
-    echo "Skipping copy to render dir for ${source}"
+    echo "Skipping copy to ${destination_base} for ${source}"
   fi
+}
+
+# Copy paths to render dir
+for row in $(echo "${pathsToCopy}" | jq -c '.[]'); do
+  copy "${row}" "${RENDER_DIR}"
 done
 
 # Base changes off the branch being deployed to
@@ -68,19 +78,7 @@ else
   git add --all -fv .
 fi
 
-#Copy from render dir to branch
+# Copy from render dir to branch
 for row in $(echo "${pathsToCopy}" | jq -c '.[]'); do
-  _jq() {
-    echo ${row} | jq -r ${1}
-  }
-  copy=$(_jq '.if')
-  target=$(_jq '.target')
-
-  if [ "${copy}" = true ]; then
-    echo "Copying from ${RENDER_DIR?}/${target} to ./${target}"
-    mkdir -p $(dirname "./${target}") && cp -r "${RENDER_DIR?}/${target}" "./${target}"
-    git add "./${target}"
-  else
-    echo "Skipping copy to branch for ${source}"
-  fi
+  copy "${row}" "." "git_add"
 done
