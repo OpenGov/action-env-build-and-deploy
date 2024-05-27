@@ -26,6 +26,7 @@ copy() {
 }
 
 # Copy paths to render dir
+echo Start copy include paths to rendered manifest
 for row in $(echo "${pathsToCopy}" | jq -c '.[]'); do
   copy "${row}" "${RENDER_DIR}"
 done
