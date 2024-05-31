@@ -117,7 +117,7 @@ runs:
     - name: Branch and stage
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: branch-and-stage.sh "${{ inputs.include-paths }}"
+      run: branch-and-stage.sh '${{ inputs.include-paths }}'
 
     - name: Git diff against ${{ env.DIFF_BRANCH }}
       shell: bash
