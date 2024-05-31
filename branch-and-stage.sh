@@ -6,7 +6,7 @@ pathsToCopy="$1"
 
 copy() {
   local row=$1
-  local destination_base=$2
+  local render_dir=$2
 
   _jq() {
     echo ${row} | jq -r ${1}
@@ -17,11 +17,16 @@ copy() {
   target=$(_jq '.target')
 
   if [ "${copy}" = true ]; then
-    echo "Copying from ${destination_base}/${target}"
-    mkdir -p $(dirname "${destination_base}/${target}") && cp -r "${source}" "${destination_base}/${target}"
-    [[ $3 == "git_add" ]] && git add "./${target}"
+    if [ $3 = "from_render" ]; then
+      echo "Copying to ./${target}"
+      mkdir -p $(dirname "./${target}") && cp -r "${render_dir}/${target}" "./${target}"
+      git add "./${target}"
+    else
+      echo "Copying to ${render_dir}/${target}"
+      mkdir -p $(dirname "${render_dir}/${target}") && cp -r "${source}" "${render_dir}/${target}"
+    fi
   else
-    echo "Skipping copy to ${destination_base} for ${source}"
+    echo "Skipping copy for ${source}"
   fi
 }
 
@@ -81,5 +86,5 @@ fi
 
 # Copy from render dir to branch
 for row in $(echo "${pathsToCopy}" | jq -c '.[]'); do
-  copy "${row}" "." "git_add"
+  copy "${row}" "${RENDER_DIR}" "from_render"
 done
