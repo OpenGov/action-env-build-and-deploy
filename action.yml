@@ -16,6 +16,12 @@ inputs:
       deploy-pr/<environment> branch and open a PR for review
     required: false
     default: .*(staging|production).*
+  force-push-on-image-change:
+    description: |
+      When true the action will push to the <environment> branch if there 
+      only image changes detected.
+    required: false
+    default: false
   dry-run:
     description: |
       On a dry-run only the kustomize build will occur and the built branch will
@@ -85,12 +91,12 @@ runs:
 
     # Kustomize setup (this should be abstracted into a separate action repo)
     - name: Kustomize Setup
-      uses: kustomize-everything/action-kustomize@v2.0.2
+      uses: kustomize-everything/action-kustomize@v2.1.0
       with:
         version: ${{ inputs.version }}
         sha256-checksum: ${{ inputs.sha256-checksum }}
 
-    - uses: azure/setup-helm@v3
+    - uses: azure/setup-helm@v4
       with:
         version: ${{ inputs.helm-version }}   # default is latest (stable)
       id: install
@@ -174,6 +180,13 @@ runs:
           Please [check the logs](${{env.RUN_URL}}).
         edit-mode: replace
         token: ${{ inputs.token }}
+
+    - name: Detect pure Image Changes and Force push if true
+      if: ${{ inputs.force-push-on-image-change == 'true') }
+      id: detect-image-changes
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: sha-change.sh
 
     - name: Commit to ${{ env.PUSH_BRANCH }}
       shell: bash
