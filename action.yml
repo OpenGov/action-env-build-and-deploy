@@ -182,7 +182,7 @@ runs:
         token: ${{ inputs.token }}
 
     - name: Detect pure Image Changes and Force push if true
-      if: ${{ inputs.force-push-on-image-change == 'true') }
+      if: ${{ inputs.force-push-on-image-change == 'true' }}
       id: detect-image-changes
       shell: bash
       working-directory: ${{ inputs.working-directory }}
